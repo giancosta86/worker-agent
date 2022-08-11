@@ -102,7 +102,9 @@ The public API entirely resides in the root package index, so you shouldn't refe
      });
      ```
 
-   - **error**: sent whenever an _non-operational_ error occurs within the worker thread - for example, because it couldn't find the operation module. It expects a `(error: Error) => void` callback.
+     **Please, note**: the error passed to this callback, when non-null, has a peculiarity: its message is the _serialization_ string - in the form `ErrorClass("Message")` - of the error that occurred within the worker thread
+
+   - **error**: sent whenever an _non-operational_, more serious error occurs within the worker thread - for example, because it couldn't find the operation module. It expects a `(error: Error) => void` callback.
 
      **Please note**: errors thrown by the operation do _not_ trigger **error** events - instead, they are passed to the error-first callback of the **result** event
 
