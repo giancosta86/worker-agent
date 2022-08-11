@@ -22,6 +22,8 @@ or
 yarn add @giancosta86/worker-agent
 ```
 
+The public API entirely resides in the root package index, so you shouldn't reference specific modules.
+
 ## Usage
 
 1. Create a module - an **operation module**, in **worker-agent**'s parlance - that:
@@ -114,12 +116,16 @@ yarn add @giancosta86/worker-agent
    agent.runOperation(90);
    ```
 
-   It is a **void** method - because results - _both output values and errors_ - will be returned later, via the **result** event.
+   It is a `void` method - because results - _both output values and errors_ - will be returned later, via the **result** event.
 
    You can send _multiple operation requests_: they are enqueued by the worker thread, ready to be processed one at a time.
 
-1. Finally, _after gathering all the results_, dont' forget to call **requestExit()** to send an _exit_ message to the worker thread's queue
+1. Finally, don't forget to call `requestExit()` to send an _exit_ message to the worker thread's queue.
+
+   **Please, note**: calling `requestExit()` enqueues a termination message that will be evaluated _as soon as all the previously-enqueued synchronous operations have completed_; however, for performance reasons, _no check is performed on asynchronous operations_ - so they will probably remain unfulfilled! Consequently, it is up to you, in your client code, to ensure that _all the async operations have settled_ **before** calling `requestExit()`.
+
+   A possible solution to the above issue may consist in a counter that is incremented when calling `runOperation()` and decremented within the **result** event callback.
 
 ## Further reference
 
-For additional examples, please consult the unit tests in the source code repository.
+For additional examples, please consult the test suites in the source code repository.

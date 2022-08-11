@@ -1,3 +1,4 @@
+import delay = require("delay");
 import { join } from "node:path";
 import { WorkerAgent } from "./agent";
 import {
@@ -12,7 +13,7 @@ describe("Worker", () => {
       new Promise<void>((resolve, reject) => {
         let errorTriggered = false;
 
-        new WorkerAgent(join(__dirname, "INEXISTING"))
+        new WorkerAgent<void, void>(join(__dirname, "INEXISTING"))
           .on("error", () => {
             errorTriggered = true;
           })
@@ -29,17 +30,51 @@ describe("Worker", () => {
       }));
   });
 
-  it("should support the exit event", async () => {
-    const exitCode = await new Promise<number>(resolve => {
-      const agent = new WorkerAgent(join(__dirname, "_add40.sync.test")).on(
-        "exit",
-        resolve
-      );
+  describe("when exiting", () => {
+    it("should support the exit event", async () => {
+      const exitCode = await new Promise<number>(resolve => {
+        const agent = new WorkerAgent<number, number>(
+          join(__dirname, "_add40.sync.test")
+        ).on("exit", resolve);
 
-      agent.requestExit();
+        agent.requestExit();
+      });
+
+      expect(exitCode).toBe(0);
     });
 
-    expect(exitCode).toBe(0);
+    it("should leave unfulfilled any waiting async operation", async () => {
+      const agent = new WorkerAgent<number, number>(
+        join(__dirname, "_add100.slow.test")
+      );
+
+      let actualOutput: number | undefined;
+
+      const exitCode = await new Promise<number>((resolve, reject) => {
+        agent.on("result", (err, output) => {
+          if (err) {
+            return reject(err);
+          }
+
+          if (output != 190) {
+            return reject(new Error("Unexpected output!"));
+          }
+
+          actualOutput = output;
+        });
+
+        agent.on("exit", resolve);
+
+        agent.runOperation(90);
+        agent.requestExit();
+      });
+
+      expect(exitCode).toBe(0);
+
+      await delay(750);
+
+      expect(actualOutput).toBeUndefined();
+    });
   });
 
   describe("when the operation is synchronous", () => {
