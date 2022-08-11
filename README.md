@@ -40,7 +40,7 @@ The public API entirely resides in the root package index, so you shouldn't refe
 
    - returning _an arbitrary type_, including a `Promise`
 
-   - _throwing errors_ when needed
+   - _throwing errors_ when needed: neither errors nor rejected promises can crash the underlying worker
 
    For example, to declare a _synchronous function_:
 
