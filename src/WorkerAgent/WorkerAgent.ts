@@ -1,8 +1,10 @@
-import { join } from "node:path";
 import { Worker, WorkerOptions } from "node:worker_threads";
-import { WorkerData, MessageToWorker, MessageFromWorker } from "./protocol";
-
-const workerModuleId = join(__dirname, "worker");
+import {
+  WorkerData,
+  MessageToWorker,
+  MessageFromWorker,
+  workerModuleId
+} from "../protocol";
 
 type GenericCallback = (...args: any[]) => void;
 
@@ -15,24 +17,29 @@ export class WorkerAgent<TInput, TOutput> {
   private readonly worker: Worker;
 
   constructor(operationModuleId: string, logToConsole = false) {
+    const workerData: WorkerData = {
+      operationModuleId,
+      logToConsole
+    };
+
     const workerOptions: WorkerOptions = {
-      workerData: {
-        operationModuleId,
-        logToConsole
-      } as WorkerData
+      workerData
     };
 
     this.worker = new Worker(workerModuleId, workerOptions);
   }
 
   runOperation(input: TInput): void {
-    this.worker.postMessage({
-      operationInput: input
-    } as MessageToWorker);
+    const message: MessageToWorker = {
+      type: "operationInput",
+      value: input
+    };
+    this.worker.postMessage(message);
   }
 
   requestExit(): void {
-    this.worker.postMessage("end" as MessageToWorker);
+    const message: MessageToWorker = { type: "end" };
+    this.worker.postMessage(message);
   }
 
   on(
@@ -71,9 +78,6 @@ export class WorkerAgent<TInput, TOutput> {
       case "error":
         workerEventSubscriptionMethod.call(this.worker, agentEvent, callback);
         break;
-
-      default:
-        throw new Error(`Unexpected event: '${agentEvent}'`);
     }
 
     return this;
@@ -87,14 +91,12 @@ export class WorkerAgent<TInput, TOutput> {
       this.worker,
       "message",
       (message: MessageFromWorker) => {
-        if ("operationErrorString" in message) {
-          const { operationErrorString } = message;
-          return callback(new Error(operationErrorString), null);
-        }
+        switch (message.type) {
+          case "operationOutput":
+            return callback(null, message.value);
 
-        if ("operationOutput" in message) {
-          const { operationOutput } = message;
-          return callback(null, operationOutput);
+          case "error":
+            return callback(new Error(message.formattedError), null);
         }
       }
     );

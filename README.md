@@ -8,7 +8,9 @@ _Typesafe wrapper for worker threads_
 
 ![Overview](docs/diagrams//overview.png)
 
-**worker-agent** is a TypeScript wrapper designed to _simplify interactions with worker threads in NodeJS_; actually, it implements a fairly common _Erlang/Elixir_ pattern: the sophisticated _messaging protocol_ is hidden behind a higher-level but still _efficient_ abstraction layer - which is also _strongly typed_, in this case.
+**worker-agent** is a TypeScript wrapper designed to _simplify interactions with worker threads in NodeJS_.
+
+Actually, it implements a fairly common _Erlang/Elixir_ pattern: the sophisticated _messaging protocol_ is hidden behind a variety of _abstraction layers_ - each with different trade-off between _simplicity_ and _performance_ - while still ensuring _strongly typed_ interfaces.
 
 ## Installation
 
@@ -65,7 +67,7 @@ The public API entirely resides in the root package index, so you shouldn't refe
    export = specialSum;
    ```
 
-1. Create a new instance of `WorkerAgent<TInput, TOutput>`, passing the path to the operation module: this will start a new worker thread, driven by the agent.
+1. Create a new instance of `WorkerAgent<TInput, TOutput>` or the more expressive `PromiseAgent<TInput, TOutput>`, passing the path to the operation module: this will start a new worker thread, driven by the agent.
 
    Furthermore:
 
@@ -78,8 +80,30 @@ The public API entirely resides in the root package index, so you shouldn't refe
    ```typescript
    import { join } from "node:path";
 
-   const agent = new WorkerAgent<number, number>(join(__dirname, "my-sum"));
+   const agent = new PromiseAgent<number, number>(join(__dirname, "my-sum"));
    ```
+
+## Choosing the right agent type
+
+The actual choice depends on a compromise between _simplicity_ and _performance_:
+
+- `PromiseAgent` is particularly _expressive_, because of its `Promise`-based interface
+
+- `WorkerAgent` is _hyper-minimalist_, but it is also _more complicated_ to use
+
+## Using PromiseAgent
+
+`PromiseAgent` is incredibly user-friendly. Just call:
+
+- its `runOperation()` method, to obtain a `Promise` that will either resolve or reject as soon as the worker thread has finished processing the given input
+
+- its `requestExit()` method, returning a `Promise` that will resolve to the worker's _exit code_.
+
+  **Please, note**: don't forget to call `requestExit()` as soon as you have finished using the agent; furthermore, the warning about _dangling asynchronous operations_ - discussed below - applies to this agent, as well.
+
+## Using WorkerAgent
+
+`WorkerAgent` is the original agent implementation - and the more sophisticated as well. In particular, once you have an instance of the agent, you'll need to:
 
 1. **Subscribe to events**; to register an event listener, you can call either `.on(...)` or `.once(...)` - as usual in NodeJS.
 

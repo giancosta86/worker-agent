@@ -1,13 +1,10 @@
-import delay = require("delay");
 import { join } from "node:path";
-import { WorkerAgent } from "./agent";
-import {
-  testAsyncOperation,
-  testSlowOperation,
-  testSyncOperation
-} from "./_shared.test";
+import delay from "delay";
+import { TestOperationModuleIds } from "../test";
+import { WorkerAgent } from "./WorkerAgent";
+import { exitAsPromise, workerAgentTestOperations } from "./_core.test";
 
-describe("Worker", () => {
+describe("WorkerAgent", () => {
   describe("when passing an inexisting module to the constructor", () => {
     it("should raise both the error event and the exit event", () =>
       new Promise<void>((resolve, reject) => {
@@ -32,35 +29,29 @@ describe("Worker", () => {
 
   describe("when exiting", () => {
     it("should support the exit event", async () => {
-      const exitCode = await new Promise<number>(resolve => {
-        const agent = new WorkerAgent<number, number>(
-          join(__dirname, "_add40.sync.test")
-        ).on("exit", resolve);
+      const agent = new WorkerAgent<number, number>(
+        TestOperationModuleIds.Sync
+      );
 
-        agent.requestExit();
-      });
+      const exitCode = await exitAsPromise(agent);
 
       expect(exitCode).toBe(0);
     });
 
     it("should leave unfulfilled any waiting async operation", async () => {
-      const agent = new WorkerAgent<number, number>(
-        join(__dirname, "_add100.slow.test")
-      );
-
       let actualOutput: number | undefined;
 
       const exitCode = await new Promise<number>((resolve, reject) => {
-        agent.on("result", (err, output) => {
-          if (err) {
+        const agent = new WorkerAgent<number, number>(
+          TestOperationModuleIds.SlowAsync
+        );
+
+        agent.on("result", (err, value) => {
+          if (value === null) {
             return reject(err);
           }
 
-          if (output != 190) {
-            return reject(new Error("Unexpected output!"));
-          }
-
-          actualOutput = output;
+          actualOutput = value;
         });
 
         agent.on("exit", resolve);
@@ -78,17 +69,11 @@ describe("Worker", () => {
   });
 
   describe("when the operation is synchronous", () => {
-    it("should process just one element", () => testSyncOperation([2], [42]));
-
-    it("should process two elements", () =>
-      testSyncOperation([5, 8], [45, 48]));
-
-    it("should process three elements", () =>
-      testSyncOperation([2, 5, 8], [42, 45, 48]));
+    workerAgentTestOperations.runSyncTests();
 
     it("should handle operation errors without stopping the worker", async () => {
       const agent = new WorkerAgent<number, number>(
-        join(__dirname, "_kaboom.sync.test")
+        TestOperationModuleIds.SyncKaboom
       );
 
       const error = await new Promise<Error | null>(resolve => {
@@ -103,25 +88,17 @@ describe("Worker", () => {
       });
       expect(output).toBe(200);
 
-      agent.requestExit();
+      const exitCode = await exitAsPromise(agent);
+      expect(exitCode).toBe(0);
     });
   });
 
   describe("when the operation returns a Promise", () => {
-    it("should process just one element", () => testAsyncOperation([2], [92]));
-
-    it("should process two elements", () =>
-      testAsyncOperation([5, 8], [95, 98]));
-
-    it("should process three elements", () =>
-      testAsyncOperation([2, 5, 8], [92, 95, 98]));
-
-    it("should process three elements with slow operation", () =>
-      testSlowOperation([10, 15, 75], [110, 115, 175]));
+    workerAgentTestOperations.runAsyncTests();
 
     it("should handle operation errors without stopping the worker", async () => {
       const agent = new WorkerAgent<number, number>(
-        join(__dirname, "_kaboom.async.test")
+        TestOperationModuleIds.AsyncKaboom
       );
 
       const error = await new Promise<Error | null>(resolve => {
@@ -136,43 +113,8 @@ describe("Worker", () => {
       });
       expect(output).toBe(30);
 
-      agent.requestExit();
+      const exitCode = await exitAsPromise(agent);
+      expect(exitCode).toBe(0);
     });
-  });
-});
-
-describe("when subscribing via .on() to an inexisting event", () => {
-  it("should throw", () => {
-    const agent = new WorkerAgent<number, number>(
-      join(__dirname, "_add90.async.test")
-    );
-
-    try {
-      expect(() => {
-        (agent as any).on("INEXISTING EVENT", () => {
-          //Just do nothing
-        });
-      }).toThrow("Unexpected event: 'INEXISTING EVENT'");
-    } finally {
-      agent.requestExit();
-    }
-  });
-});
-
-describe("when subscribing via .once() to an inexisting event", () => {
-  it("should throw", () => {
-    const agent = new WorkerAgent<number, number>(
-      join(__dirname, "_add90.async.test")
-    );
-
-    try {
-      expect(() => {
-        (agent as any).once("INEXISTING EVENT", () => {
-          //Just do nothing
-        });
-      }).toThrow("Unexpected event: 'INEXISTING EVENT'");
-    } finally {
-      agent.requestExit();
-    }
   });
 });

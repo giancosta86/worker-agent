@@ -1,6 +1,6 @@
 {
   "name": "@giancosta86/worker-agent",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Typesafe wrapper for worker threads",
   "keywords": [
     "typesafe",
@@ -31,7 +31,7 @@
     "check-all": "yarn check-format && yarn lint && yarn test",
     "check-format": "prettier --check .",
     "lint": "eslint . --ext .js,.ts,.jsx,.tsx,.cjs,.mjs",
-    "test": "cross-env NODE_OPTIONS=\"-r ts-node/register --no-warnings\" jest",
+    "test": "cross-env NODE_OPTIONS=\"-r ts-node/register --no-warnings\" jest --detectOpenHandles",
     "test:watch": "yarn test --watch",
     "test:coverage": "yarn test --coverage",
     "build": "yarn compile-ts",
@@ -40,13 +40,15 @@
     "test:prod": "jest dist --testPathIgnorePatterns=/_.+"
   },
   "dependencies": {
-    "@giancosta86/format-error": "^1.0.1"
+    "@giancosta86/format-error": "^1.0.1",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@swc/core": "^1.2.218",
     "@swc/jest": "^0.2.22",
     "@types/jest": "^28.1.4",
     "@types/node": "^16",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.30.3",
     "@typescript-eslint/parser": "^5.30.3",
     "cross-env": "^7.0.3",

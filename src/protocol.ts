@@ -1,3 +1,7 @@
+import { join } from "node:path";
+
+export const workerModuleId = join(__dirname, "worker");
+
 export type WorkerData = {
   operationModuleId: string;
   logToConsole: boolean;
@@ -5,14 +9,21 @@ export type WorkerData = {
 
 export type MessageToWorker =
   | {
-      operationInput: unknown;
-    }
-  | "end";
-
-export type MessageFromWorker =
-  | {
-      operationOutput: unknown;
+      type: "operationInput";
+      correlationId?: string;
+      value: unknown;
     }
   | {
-      operationErrorString: string;
+      type: "end";
     };
+
+export type MessageFromWorker = { correlationId?: string } & (
+  | {
+      type: "operationOutput";
+      value: unknown;
+    }
+  | {
+      type: "error";
+      formattedError: string;
+    }
+);

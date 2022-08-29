@@ -10,33 +10,29 @@ const logger = logToConsole ? console : undefined;
 logger?.info(`###> Trying to load module '${operationModuleId}'...`);
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const operationModule = require(operationModuleId);
+const operation = require(operationModuleId);
 
 logger?.info(`###> Module loaded!`);
 
 parentPort?.on("message", (message: MessageToWorker) => {
-  if (message == "end") {
-    logger?.info(`###> Now exiting worker thread!`);
-    setImmediate(() => exit(0));
-    return;
-  }
+  switch (message.type) {
+    case "operationInput":
+      logger?.info(`###> Now running the operation!`);
+      runOperation(message.value, message.correlationId);
+      return;
 
-  if ("operationInput" in message) {
-    logger?.info(`###> Now running the operation!`);
-    runOperation(message.operationInput);
-    return;
+    case "end":
+      logger?.info(`###> Now exiting worker thread!`);
+      setImmediate(() => exit(0));
+      return;
   }
-
-  throw new Error(
-    `Unexpected message received by the worker: ${JSON.stringify(message)}`
-  );
 });
 
-function runOperation(input: unknown): void {
+function runOperation(input: unknown, correlationId?: string): void {
   let operationOutput: unknown;
 
   try {
-    operationOutput = operationModule(input);
+    operationOutput = operation(input);
   } catch (err) {
     logger?.error(
       `###> Error when calling the worker's operation: ${formatError(err, {
@@ -45,9 +41,12 @@ function runOperation(input: unknown): void {
       })}`
     );
 
-    parentPort?.postMessage({
-      operationErrorString: formatError(err)
-    } as MessageFromWorker);
+    const message: MessageFromWorker = {
+      correlationId,
+      type: "error",
+      formattedError: formatError(err)
+    };
+    parentPort?.postMessage(message);
 
     return;
   }
@@ -57,9 +56,12 @@ function runOperation(input: unknown): void {
   if (!(operationOutput instanceof Promise)) {
     logger?.info(`###> Sending the result to the parent!`);
 
-    parentPort?.postMessage({
-      operationOutput
-    } as MessageFromWorker);
+    const message: MessageFromWorker = {
+      correlationId,
+      type: "operationOutput",
+      value: operationOutput
+    };
+    parentPort?.postMessage(message);
 
     return;
   }
@@ -72,9 +74,12 @@ function runOperation(input: unknown): void {
         `###> Promise successful! Sending the result to the parent: ${value}`
       );
 
-      parentPort?.postMessage({
-        operationOutput: value
-      } as MessageFromWorker);
+      const message: MessageFromWorker = {
+        correlationId,
+        type: "operationOutput",
+        value
+      };
+      parentPort?.postMessage(message);
     })
     .catch(operationError => {
       logger?.error(
@@ -84,8 +89,11 @@ function runOperation(input: unknown): void {
         )}`
       );
 
-      parentPort?.postMessage({
-        operationErrorString: formatError(operationError)
-      } as MessageFromWorker);
+      const message: MessageFromWorker = {
+        correlationId,
+        type: "error",
+        formattedError: formatError(operationError)
+      };
+      parentPort?.postMessage(message);
     });
 }
