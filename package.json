@@ -1,6 +1,6 @@
 {
   "name": "@giancosta86/worker-agent",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Typesafe wrapper for worker threads",
   "keywords": [
     "typesafe",
@@ -40,7 +40,7 @@
     "test:prod": "jest dist --testPathIgnorePatterns=/_.+"
   },
   "dependencies": {
-    "@giancosta86/format-error": "^1.0.1",
+    "@giancosta86/format-error": "^2.0.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -52,7 +52,6 @@
     "@typescript-eslint/eslint-plugin": "^5.30.3",
     "@typescript-eslint/parser": "^5.30.3",
     "cross-env": "^7.0.3",
-    "delay": "^5.0.0",
     "eslint": "^8.18.0",
     "jest": "^28.1.3",
     "prettier": "^2.7.1",

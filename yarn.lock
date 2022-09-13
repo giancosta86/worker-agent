@@ -312,10 +312,10 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
-"@giancosta86/format-error@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@giancosta86/format-error/-/format-error-1.0.1.tgz#54bc37205043bb30f46c3cfb3bc74ad7c9cb17fa"
-  integrity sha512-lfo1H5HGqG0WmmvakqhdK3Uwh6lpsjyMX9En5m9trQtL20nVh14Ax+XXwj7xi50ZRBCtsB3vTzm+FlikrgQcZQ==
+"@giancosta86/format-error@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@giancosta86/format-error/-/format-error-2.0.0.tgz#c907eefbc76a39eec78b3c7c0099fa05ff7f16b1"
+  integrity sha512-MJNbonUQuiNQXqCAMn/kSzrj+M1Em1RG0cnc/feZSB1DhdsxrTLw7H2Vs5WKvf6E+EV0n2NZlU0Imjzsd7wixw==
 
 "@humanwhocodes/config-array@^0.10.4":
   version "0.10.4"
@@ -1317,11 +1317,6 @@ deepmerge@^4.2.2:
   version "4.2.2"
   resolved "https://registry.yarnpkg.com/deepmerge/-/deepmerge-4.2.2.tgz#44d2ea3679b8f4d4ffba33f03d865fc1e7bf4955"
   integrity sha512-FJ3UgI4gIl+PHZm53knsuSFpE+nESMr7M4v9QcgB7S63Kj/6WqMiFQJpBBYz1Pt+66bZpP3Q7Lye0Oo9MPKEdg==
-
-delay@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/delay/-/delay-5.0.0.tgz#137045ef1b96e5071060dd5be60bf9334436bd1d"
-  integrity sha512-ReEBKkIfe4ya47wlPYf/gu5ib6yUG0/Aez0JQZQz94kiWtRQvZIQbTiehsnwHvLSWJnQdhVeqYue7Id1dKr0qw==
 
 detect-newline@^3.0.0:
   version "3.1.0"

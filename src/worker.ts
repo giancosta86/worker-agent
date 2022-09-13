@@ -1,6 +1,6 @@
 import { parentPort, workerData } from "node:worker_threads";
 import { exit } from "node:process";
-import { formatError } from "@giancosta86/format-error";
+import { ErrorParts, formatError } from "@giancosta86/format-error";
 import { MessageToWorker, WorkerData, MessageFromWorker } from "./protocol";
 
 const { operationModuleId, logToConsole } = workerData as WorkerData;
@@ -35,10 +35,10 @@ function runOperation(input: unknown, correlationId?: string): void {
     operationOutput = operation(input);
   } catch (err) {
     logger?.error(
-      `###> Error when calling the worker's operation: ${formatError(err, {
-        showCauseChain: true,
-        showStackTrace: true
-      })}`
+      `###> Error when calling the worker's operation: ${formatError(
+        err,
+        ErrorParts.All
+      )}`
     );
 
     const message: MessageFromWorker = {
@@ -85,7 +85,7 @@ function runOperation(input: unknown, correlationId?: string): void {
       logger?.error(
         `###> Promise failed! Sending an error message to the parent! The error is: ${formatError(
           operationError,
-          { showCauseChain: true, showStackTrace: true }
+          ErrorParts.All
         )}`
       );
 

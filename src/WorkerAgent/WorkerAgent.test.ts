@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import delay from "delay";
+import { setTimeout as delay } from "node:timers/promises";
 import { TestOperationModuleIds } from "../test";
 import { WorkerAgent } from "./WorkerAgent";
 import { exitAsPromise, workerAgentTestOperations } from "./_core.test";
